@@ -283,7 +283,86 @@ jobs:
           "
 
 ```
+## Pi-Hole
 
+#### 1. Install pihole:
+
+```sh
+curl -sSL https://install.pi-hole.net | bash
+```
+#### 2. Wizard Questions:
+
+```
+Question 1: OK
+Question 2: OK
+Question 3: Continue
+Question 4: eth0 -> Select
+Question 5: Yes -> Continue
+Question 6: OK
+Question 7: Google DNS -> Yes
+Question 8: Yes
+Question 9: Yes
+Question 10: Yes
+Question 11: 0 -> Continue
+Question 12 Take down the information -> OK
+```
+
+#### 3. Change Password:
+
+```sh
+sudo pihole -a -p
+```
+#### 4. Enter and Confirm Password
+
+#### 5. Change Pi-Hole Port:
+
+```sh
+sudo vim /etc/lighttpd/lighttpd.conf
+```
+```sh
+server.port = 8080
+```
+
+#### 6. Add Pi-Hole Custom Port to ufw:
+
+```sh
+sudo ufw allow 8080
+```
+
+#### 7. Restart Lighttpd:
+
+```sh
+sudo systemctl restart lighttpd
+```
+
+#### 8. Access Pi-Hole:
+
+```sh
+http://<Raspberry-Pi_IP>:8080/admin/index.php
+```
+
+## NginX
+
+#### 1. Install NginX:
+
+```sh
+sudo apt install nginx
+```
+
+#### 2. Start and Enable Nginx:
+
+```sh
+sudo systemctl start nginx
+sudo systemctl enable nginx
+```
+
+#### 3. Check Nginx Status:
+
+```sh
+sudo systemctl status nginx
+```
+
+## ==========================================================================================
 ## TODO: 
 ### - USE A DEPLOYMENT KEY
 ### - FIX STRICT HOST KEY CHECKING
