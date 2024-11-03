@@ -148,3 +148,106 @@ docker --version
 docker ps
 ```
 
+## GitHub Actions
+
+#### 1. Setup Port forwarding for SSH:
+- Login into your router
+- In WAN settings enable port forwarding for SSH
+- Enter the following:
+  
+  ```
+  "Service Name": "GitHub Actions"
+  "Protocol": "TCP"
+  "External Port": 22
+  "Internal Port": 22
+  "Internal IP": <Your Pi Private IP>
+  ```
+  
+#### 2. Create Encryption keys:
+- Generate Private and Public keys on your local machine:
+```sh
+ssh-keygen -t ed25519 -C "github-actions" -f ~/.ssh/github-actions
+```
+```sh
+ssh-copy-id -i ~/.ssh/github-actions.pub <UserName>@<Your-Pi's-IP>
+```
+
+#### 3. Add GitHub Secrets:
+- Add the following Secrets (<repo> -> Settings -> Security -> Secrets and Variables -> Actions):
+- SSH-Private-Key = cat .ssh/github-actions
+  
+```
+  "DOCKER_USERNAME": <UserName>
+  "DOCKER_PASSWORD": <PassWord>
+  "DOCKER_PROJECT": <Docker-Hub-Project-Name>
+  "PI_K3_SSH_PRIVATE_KEY": <SSH-Private-Key>
+  "SSH_IP": <Your Public IP>
+  "SSH_USERNAME": <Your Pi's Username>
+```
+
+#### 4. Test SSH Connection:
+- Make the following:
+
+```sh
+mkdir .github/workflows
+touch deploy.yml
+```
+- In `deploy.yml` Add the following:
+
+```yml
+name: Build, Push, and Deploy Docker Image
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+env:
+  DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+  DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+  DOCKER_PROJECT: ${{ secrets.DOCKER_PROJECT }}
+  PI_K3_SSH_PRIVATE_KEY: ${{ secrets.PI_K3_SSH_PRIVATE_KEY }}
+  SSH_USERNAME: ${{ secrets.SSH_USERNAME }}
+  SSH_IP: ${{ secrets.SSH_IP }}
+
+jobs:
+  docker_build_and_push:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Log in to Docker Hub
+      run: echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+
+    - name: Build Docker Image
+      run: |
+        docker build -t $DOCKER_USERNAME/$DOCKER_PROJECT:latest .
+
+    - name: Push Docker Image
+      run: |
+        docker push $DOCKER_USERNAME/$DOCKER_PROJECT:latest
+
+  rpi_deploy:
+    runs-on: ubuntu-latest
+    needs: docker_build_and_push
+
+    steps:
+    - name: Set up SSH
+      uses: webfactory/ssh-agent@v0.9.0
+      with:
+        ssh-private-key: $PI_K3_SSH_PRIVATE_KEY
+
+    - name: Pull and Run Docker Container on Raspberry Pi
+      run: |
+        ssh -o StrictHostKeyChecking=no "$SSH_USERNAME"@"$SSH_IP" "
+          docker stop $DOCKER_PROJECT || true && \
+          docker rm $DOCKER_PROJECT || true && \
+          docker pull $DOCKER_USERNAME/$DOCKER_PROJECT:latest && \
+          docker run -d -p 4200:4200 --name $DOCKER_PROJECT $DOCKER_USERNAME/$DOCKER_PROJECT:latest
+        "
+```
+
+## TODO: USE A DEPLOYMENT KEY AND TEST SSH CONNECTION
