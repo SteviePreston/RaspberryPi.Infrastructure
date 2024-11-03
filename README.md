@@ -362,7 +362,87 @@ sudo systemctl enable nginx
 sudo systemctl status nginx
 ```
 
-## ==========================================================================================
+#### 4. Create Subdomains on DNS Provider:
+- Create A class and CNAMES on DNS Provider
+
+```
+A Class = {
+Type : A
+Name : <subdomain>
+Data : <raspberry-pi-ip>
+TTL  : 600
+}
+```
+```
+CNAME Class = {
+Type : CNAME
+Name : www.<subdomain>
+Data : <subdomain>.<raspberry-pi-ip>
+TTL  : 600
+}
+```
+
+#### 5. Add Host Config:
+
+```sh
+sudo vim /etc/hosts
+```
+
+- Add IP and Host name to the `/etc/hosts` file.
+
+```sh
+<raspberry-pi-ip> domain.name.com
+```
+
+#### 6. Set Up an Nginx Reverse Proxy for Pi-hole
+
+- Create a configuration file:
+  
+```sh
+vim /etc/nginx/sites-available/<subdomain>.<domain.com>
+```
+- Configure the Reverse Proxy:
+```
+server {
+    listen 80;
+    server_name subdomain.domain.com www.subdomain.domain.com;
+
+    location / {
+        proxy_pass http://<raspberry-pi-ip>:<application_port>;  
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # Optional: Set up basic authentication if you want to restrict access
+    # auth_basic "Restricted Access";
+    # auth_basic_user_file /etc/nginx/.pihole_htpasswd;
+}
+```
+
+#### 7. Link the configuration file to Nginx’s sites-enabled directory:
+
+```sh
+sudo ln -s /etc/nginx/sites-available/<subdomain>.<domain.com> /etc/nginx/sites-enabled/
+```
+
+#### 8. Test and Reload Nginx:
+
+```sh
+sudo nginx -t
+sudo systemctl reload nginx
+```
+
+#### 9. Access the site
+
+```
+http://www.<subdomain>.<domain>.com
+```
+
+
+
+## =========================================================================
 ## TODO: 
 ### - USE A DEPLOYMENT KEY
 ### - FIX STRICT HOST KEY CHECKING
