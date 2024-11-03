@@ -254,15 +254,15 @@ jobs:
       uses: actions/checkout@v4
 
     - name: Log in to Docker Hub
-      run: echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+      run: echo "${{ env.DOCKER_PASSWORD }}" | docker login -u "${{ env.DOCKER_USERNAME }}" --password-stdin
 
     - name: Build Docker Image
       run: |
-        docker build -t $DOCKER_USERNAME/$DOCKER_PROJECT:latest .
+        docker build -t ${{ env.DOCKER_USERNAME }}/${{ env.DOCKER_PROJECT }}:latest .
 
     - name: Push Docker Image
       run: |
-        docker push $DOCKER_USERNAME/$DOCKER_PROJECT:latest
+        docker push ${{ env.DOCKER_USERNAME }}/${{ env.DOCKER_PROJECT }}:latest
 
   rpi_deploy:
     runs-on: ubuntu-latest
@@ -272,16 +272,16 @@ jobs:
     - name: Set up SSH
       uses: webfactory/ssh-agent@v0.9.0
       with:
-        ssh-private-key: $PI_K3_SSH_PRIVATE_KEY
+        ssh-private-key: ${{ env.PI_K3_SSH_PRIVATE_KEY }}
 
     - name: Pull and Run Docker Container on Raspberry Pi
       run: |
-        ssh -o StrictHostKeyChecking=no "$SSH_USERNAME"@"$SSH_IP" "
-          docker stop $DOCKER_PROJECT || true && \
-          docker rm $DOCKER_PROJECT || true && \
-          docker pull $DOCKER_USERNAME/$DOCKER_PROJECT:latest && \
-          docker run -d -p 4200:4200 --name $DOCKER_PROJECT $DOCKER_USERNAME/$DOCKER_PROJECT:latest
-        "
+        ssh -o StrictHostKeyChecking=no ${{ env.SSH_USERNAME }}@${{ env.SSH_IP }} "
+          docker stop ${{ env.DOCKER_PROJECT }} || true && \
+          docker rm ${{ env.DOCKER_PROJECT }} || true && \
+          docker pull ${{ env.DOCKER_USERNAME }}/${{ env.DOCKER_PROJECT }}:latest
+          "
+
 ```
 
-## TODO: USE A DEPLOYMENT KEY AND TEST SSH CONNECTION
+## TODO: USE A DEPLOYMENT KEY 
