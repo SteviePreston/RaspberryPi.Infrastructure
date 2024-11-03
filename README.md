@@ -73,6 +73,40 @@ Reboot your Raspberry Pi:
 sudo reboot
 ```
 
+## UFW (Uncomplicated Fire Wall)
+
+- Check the status of ufw
+
+```sh
+sudo ufw status
+```
+
+- Allow SSH, HTTP & HTTPS:
+
+```sh
+sudo ufw allow ssh
+sudo ufw allow http
+sudo ufw allow https
+```
+
+- Enable ufw
+
+```sh
+sudo ufw enable
+```
+
+- Recheck the status if ufw:
+
+```sh
+sudo ufw status verbose
+```
+
+- Reload ufw
+
+```sh
+sudo ufw reload
+```
+
 ## Docker
 
 #### 1. Remove conflicting packages:
