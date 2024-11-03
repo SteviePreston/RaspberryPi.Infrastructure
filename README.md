@@ -341,6 +341,10 @@ sudo systemctl restart lighttpd
 http://<Raspberry-Pi_IP>:8080/admin/index.php
 ```
 
+#### 9. Enable IPv6 DNS:
+
+- Settings -> DNS -> Tick the IPv6 Google DNS -> Save
+
 ## NginX
 
 #### 1. Install NginX:
