@@ -1,4 +1,8 @@
-# Setup
+# Raspberry Pi Home Cluster
+
+This is an experimental home project, Trying to build infrasturture for home project, Down the line I plan to add 2 more 8gb Raspberry pi-5 and create a small cluster with persistant storage.
+I will add more if nessary dependant on the scale of my personal project. The techstack I plan to use is: Anisble, Docker, K3's, GitLab Actions, Ubuntu Server LTS, Grafana, nginx, PostgresDB Prometheus and Harbor.
+Will add more if scaling issues occur. Will document Hardware if needed as the next stage will be a switch and two raspberry pi's to add as worker nodes.
 
 ## Raspberry Pi
 
