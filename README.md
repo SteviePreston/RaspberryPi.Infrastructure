@@ -448,9 +448,127 @@ sudo systemctl reload nginx
 http://www.<subdomain>.<domain>.com
 ```
 
+## k3s
+
+#### 1. Install k3s:
+- On the Master Node (Primary Pi), run:
+
+```sh
+curl -sfL https://get.k3s.io | sh -
+```
+
+#### 2. Retrieve the token, which you’ll need to connect worker nodes:
+
+```sh
+sudo cat /var/lib/rancher/k3s/server/node-token
+```
+
+#### 3. Verify k3s on the Master Node:
+
+```sh
+sudo kubectl get nodes
+```
+
+#### 4. Add Worker Nodes to the Master Node:
+
+```sh
+curl -sfL https://get.k3s.io | K3S_URL=https://<master-ip>:6443 K3S_TOKEN=<node-token> sh -
+```
+
+#### 5. Verify k3s on the worker Node:
+
+```sh
+sudo kubectl get nodes
+```
+
+#### 6. Deploy a Docker Container to the k3s Cluster:
+-Create a Kubernetes Deployment YAML: `.deployment/deployment.yml` for deploying your Docker container to the cluster:
+
+```yml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: my-app
+  template:
+    metadata:
+      labels:
+        app: my-app
+    spec:
+      containers:
+      - name: my-app-container
+        image: your-docker-username/your-image-name:tag
+        ports:
+        - containerPort: 80
+```
+
+- Apply the Deployment:
+
+```sh
+kubectl apply -f .deployment/deployment.yml
+```
+
+#### 7. Expose the Deployment within Your Local Network :
+- To access the deployed container within your Pi network, expose it using `.deployment/service.yml` file for a NodePort service:
+
+```yml
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-app-service
+spec:
+  type: NodePort
+  selector:
+    app: my-app
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 123
+      nodePort: 30000  # Optional, any available port in the 30000-32767 range
+```
+This way, external requests to your Raspberry Pi on port 30000 (or whichever nodePort you choose) will be correctly routed to port 123 in your app container.
+
+
+- Apply the Service:
+
+```sh
+kubectl apply -f .deployment/service.yml
+```
+
+#### 8. Edit k3s Permissions :
+
+- Start k3s with --write-kubeconfig-mode:
+- Edit k3s Service and Add the `--write-kubeconfig-mode` Flag
+
+```sh
+sudo vim /etc/systemd/system/k3s.service
+ExecStart=/usr/local/bin/k3s server --write-kubeconfig-mode 644
+```
+- Reload and Restart k3s:
+
+```sh
+sudo systemctl daemon-reload
+sudo systemctl restart k3s
+```
+- Verfify Changes:
+
+```sh
+kubectl get nodes
+```
+
+#### 9. Update CICD to include k3s config:
+
+```yml
+**** WILL UPDATE ONCE FIXED ****
+```
 
 ## ============================================================
 ## TODO: 
+### - k3s is a WiP
 ### - USE A DEPLOYMENT KEY
 ### - FIX STRICT HOST KEY CHECKING
-### - INSTALL K3, ANSIBLE AND GRAFANA
+### - INSTALL ANSIBLE AND GRAFANA
